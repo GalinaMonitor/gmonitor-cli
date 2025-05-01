@@ -1,4 +1,4 @@
-# GmonitorBot
+# GmonitorCli
 ## Cli-клиент для работы с API Groq
 
 ## Архитектура
@@ -12,7 +12,7 @@
 - Установленный [pipx](https://pipx.pypa.io/stable/installation/)
 - Поднятая Kafka с подключенным [gmonitor-api-gateway](https://github.com/GalinaMonitor/gmonitor-api-gateway)
 ```bash
-pipx install git+https://github.com/GalinaMonitor/gmonitor-all.git
+pipx install git+https://github.com/GalinaMonitor/gmonitor-cli.git
 export GMONITOR_CLI_KAFKA_HOST=<Хост Kafka>
 export GMONITOR_CLI_KAFKA_PORT=<Порт Kafka>
 ```
