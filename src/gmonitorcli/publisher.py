@@ -10,24 +10,33 @@ from .settings import settings, logger
 
 
 class TopicsEnum(StrEnum):
+    """
+    Перечисление тем для обмена сообщениями.
+    """
+
     GPT_BOT_RESULT = "gpt_bot_result"
     GPT_BOT_REQUEST = "gpt_bot_request"
 
 
-class GptResponseType(StrEnum):
-    IMAGE = auto()
-    TEXT = auto()
+class GptDtoType(StrEnum):
+    """
+    Перечисление типов ответов от GPT модели.
+    """
+
+    IMAGE = auto()  # Изображение
+    TEXT = auto()  # Текст
+    AUDIO = auto()  # Аудио
 
 
-class GptResponse(BaseModel):
-    chat_id: int
-    text: str = ""
-    type: GptResponseType = GptResponseType.TEXT
+class GptDto(BaseModel):
+    """
+    Модель данных для передачи ответов от GPT.
+    """
 
-
-class GptRequest(BaseModel):
-    chat_id: int
-    text: str
+    content: str  # Содержимое ответа
+    is_error: bool = False  # Флаг ошибки
+    chat_id: int | None = None  # Идентификатор чата
+    type: GptDtoType = GptDtoType.TEXT  # Тип ответа
 
 
 class RequestClient:
@@ -36,7 +45,7 @@ class RequestClient:
             f"{settings.kafka_host}:{settings.kafka_port}", logger=None
         )
         self.chat_id = int(uuid.uuid4())
-        self.pending_request: asyncio.Future[GptResponse] | None = None
+        self.pending_request: asyncio.Future[GptDto] | None = None
         self.running = False
 
     async def start(self) -> None:
@@ -46,7 +55,7 @@ class RequestClient:
         @self.broker.subscriber(
             TopicsEnum.GPT_BOT_RESULT,
         )  # type: ignore
-        async def handle_response(message: GptResponse) -> None:
+        async def handle_response(message: GptDto) -> None:
             if message.chat_id != self.chat_id:
                 return
             future = self.pending_request
@@ -68,11 +77,11 @@ class RequestClient:
 
     async def send_request(
         self, content: str, timeout: float = 10.0
-    ) -> Optional[GptResponse]:
+    ) -> Optional[GptDto]:
         if not self.running:
             await self.start()
-        request = GptRequest(text=content, chat_id=int(self.chat_id))
-        future: asyncio.Future[GptResponse] = asyncio.Future()
+        request = GptDto(content=content, chat_id=int(self.chat_id))
+        future: asyncio.Future[GptDto] = asyncio.Future()
         self.pending_request = future
         await self.broker.publish(request, topic=TopicsEnum.GPT_BOT_REQUEST)
         logger.info(f"Отправлен запрос с ID {self.chat_id}: {content}")
