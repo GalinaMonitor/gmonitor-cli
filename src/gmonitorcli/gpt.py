@@ -18,10 +18,10 @@ async def gpt(request: str, is_base: bool = False) -> None:
         response = await client.send_request(request)
         if response:
             if not is_base:
-                print(f"Команда '{response.text}' скопирована в буфер обмена")
-                pyperclip.copy(response.text)
+                print(f"Команда '{response.content}' скопирована в буфер обмена")
+                pyperclip.copy(response.content)
             else:
-                print(f"Ответ: {response.text}")
+                print(f"Ответ: {response.content}")
     finally:
         await client.stop()
 
